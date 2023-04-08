@@ -1,6 +1,6 @@
 use diesel::{QueryDsl, RunQueryDsl};
-use rocket::{get, post};
-use rocket::response::status::Created;
+use rocket::{get, post, delete};
+use rocket::response::status::{Created, NoContent};
 use rocket::serde::json::Json;
 
 use crate::models::writer::{WriterModel, NewWriter};
@@ -37,4 +37,16 @@ pub async fn new_writer(db: Db, new_writer: Json<NewWriter>) -> Result<Created<J
     }).await?;
 
     Ok(Created::new("/").body(Json(res)))
+}
+
+#[delete("/<id>")]
+pub async fn delete_writer(db: Db, id: i32) -> Result<NoContent>
+{
+    db.run(move |conn| {
+        diesel::delete(writer::table)
+            .filter(writer::id.eq(id))
+            .execute(conn)
+    }).await?;
+
+    Ok(NoContent)
 }

@@ -10,6 +10,8 @@ use rocket_sync_db_pools::database;
 
 use dotenvy::dotenv;
 
+use crate::api::writer as writer;
+
 #[database("diesel")]
 pub struct Db(diesel::PgConnection);
 
@@ -21,7 +23,7 @@ async fn main() -> Result<(), rocket::Error> {
 
     let _rocket = rocket::build()
         .attach(Db::fairing())
-        .mount("/writer", routes![crate::api::writer::list_writers, crate::api::writer::get_writer, crate::api::writer::new_writer])
+        .mount("/writer", routes![writer::list_writers, writer::get_writer, writer::new_writer, writer::delete_writer])
         .launch()
         .await?;
 
