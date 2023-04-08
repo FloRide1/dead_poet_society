@@ -7,7 +7,13 @@ edition = "2021"
 
 [dependencies]
 diesel = { version = "2.0.0", features = ["postgres"] }
+rocket = { version = "=0.5.0-rc.3", features = ["json"] }
 dotenvy = "0.15"
 serde = "1"
 serde_json = "1"
 serde_derive = "1"
+
+
+[dependencies.rocket_sync_db_pools]
+version = "=0.1.0-rc.3"
+features = ["diesel_postgres_pool"]
