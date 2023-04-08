@@ -3,22 +3,27 @@ extern crate dotenvy;
 
 pub mod models;
 pub mod schema;
+pub mod api;
 
-use diesel::pg::PgConnection;
-use diesel::prelude::*;
+use rocket::routes;
+use rocket_sync_db_pools::database;
+
 use dotenvy::dotenv;
-use std::env;
 
-fn main() {
+#[database("diesel")]
+pub struct Db(diesel::PgConnection);
+
+#[rocket::main]
+async fn main() -> Result<(), rocket::Error> {
     println!("Hello, world!");
 
-    let _connection = &mut establish_connection();
-}
-
-pub fn establish_connection() -> PgConnection {
     dotenv().ok();
 
-    let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
-    PgConnection::establish(&database_url)
-        .unwrap_or_else(|_| panic!("Error connecting to {}", database_url))
+    let _rocket = rocket::build()
+        .attach(Db::fairing())
+        .mount("/writer", routes![crate::api::writer::list_writers, crate::api::writer::get_writer])
+        .launch()
+        .await?;
+
+    Ok(())
 }
