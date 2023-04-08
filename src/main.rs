@@ -21,7 +21,7 @@ async fn main() -> Result<(), rocket::Error> {
 
     let _rocket = rocket::build()
         .attach(Db::fairing())
-        .mount("/writer", routes![crate::api::writer::list_writers, crate::api::writer::get_writer])
+        .mount("/writer", routes![crate::api::writer::list_writers, crate::api::writer::get_writer, crate::api::writer::new_writer])
         .launch()
         .await?;
 

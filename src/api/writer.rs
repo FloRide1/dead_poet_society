@@ -1,8 +1,9 @@
 use diesel::{QueryDsl, RunQueryDsl};
-use rocket::get;
+use rocket::{get, post};
+use rocket::response::status::Created;
 use rocket::serde::json::Json;
 
-use crate::models::writer::WriterModel;
+use crate::models::writer::{WriterModel, NewWriter};
 use crate::schema::writer;
 use crate::Db;
 
@@ -25,4 +26,15 @@ pub async fn get_writer(db: Db, id: i32) -> Option<Json<WriterModel>> {
             .filter(writer::id.eq(id))
             .first(conn)
     }).await.map(Json).ok()
+}
+
+#[post("/", format = "application/json", data = "<new_writer>")]
+pub async fn new_writer(db: Db, new_writer: Json<NewWriter>) -> Result<Created<Json<WriterModel>>> {
+    let res: WriterModel = db.run(move |conn| {
+        diesel::insert_into(writer::table)
+            .values(&*new_writer)
+            .get_result(conn)
+    }).await?;
+
+    Ok(Created::new("/").body(Json(res)))
 }
