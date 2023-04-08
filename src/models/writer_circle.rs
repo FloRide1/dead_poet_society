@@ -9,28 +9,18 @@ use crate::models::circle::CircleModel;
 use crate::models::writer::WriterModel;
 
 #[derive(
-    Debug,
-    PartialEq,
-    Serialize,
-    Deserialize,
-    Queryable,
-    Identifiable,
-    Insertable,
-    AsChangeset,
-    Associations,
+    Debug, PartialEq, Serialize, Deserialize, Queryable, Identifiable, Insertable, Associations,
 )]
-#[diesel(belongs_to(WriterModel, foreign_key = id))]
-#[diesel(belongs_to(CircleModel, foreign_key = id))]
+#[diesel(belongs_to(WriterModel, foreign_key = writer_id))]
+#[diesel(belongs_to(CircleModel, foreign_key = circle_id))]
+#[diesel(primary_key(writer_id, circle_id))]
 #[diesel(table_name = writercircle)]
 pub struct WriterCircleModel {
-    #[diesel(column_name = id)]
-    pub id: i32,
+    #[diesel(column_name = writer_id)]
+    pub writer_id: i32,
 
     #[diesel(column_name = circle_id)]
     pub circle_id: i32,
-
-    #[diesel(column_name = writer_id)]
-    pub writer_id: i32,
 }
 
 #[derive(Debug, PartialEq, Serialize, Deserialize, Insertable)]
