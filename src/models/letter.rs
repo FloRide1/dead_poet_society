@@ -18,9 +18,9 @@ use crate::schema::letter;
     AsChangeset,
     Associations,
 )]
-#[diesel(belongs_to(WriterModel, foreign_key = id))]
-#[diesel(belongs_to(CircleModel, foreign_key = id))]
-#[diesel(belongs_to(LetterModel, foreign_key = id))]
+#[diesel(belongs_to(WriterModel, foreign_key = writer_id))]
+#[diesel(belongs_to(CircleModel, foreign_key = circle_id))]
+#[diesel(belongs_to(LetterModel, foreign_key = reply_id))]
 #[diesel(table_name = letter)]
 pub struct LetterModel {
     #[diesel(column_name = id)]
