@@ -23,7 +23,7 @@ async fn main() -> Result<(), rocket::Error> {
 
     let _rocket = rocket::build()
         .attach(Db::fairing())
-        .mount("/writer", routes![writer::list_writers, writer::get_writer, writer::new_writer, writer::delete_writer])
+        .mount("/writer", routes![writer::list_writers, writer::get_writer, writer::new_writer, writer::edit_writer, writer::delete_writer])
         .launch()
         .await?;
 

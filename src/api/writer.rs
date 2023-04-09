@@ -1,5 +1,5 @@
 use diesel::{QueryDsl, RunQueryDsl};
-use rocket::{get, post, delete};
+use rocket::{get, post, delete, patch};
 use rocket::response::status::{Created, NoContent};
 use rocket::serde::json::Json;
 
@@ -37,6 +37,18 @@ pub async fn new_writer(db: Db, new_writer: Json<NewWriter>) -> Result<Created<J
     }).await?;
 
     Ok(Created::new("/").body(Json(res)))
+}
+
+#[patch("/<id>", format = "application/json", data = "<new_writer>")]
+pub async fn edit_writer(db: Db, id: i32, new_writer: Json<NewWriter>) -> Result<NoContent> {
+    db.run(move |conn| {
+        diesel::update(writer::table)
+            .filter(writer::id.eq(id))
+            .set(&*new_writer)
+            .execute(conn)
+    }).await?;
+
+    Ok(NoContent)
 }
 
 #[delete("/<id>")]
