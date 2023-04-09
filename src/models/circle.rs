@@ -17,7 +17,7 @@ pub struct CircleModel {
     pub name: String,
 }
 
-#[derive(Debug, PartialEq, Serialize, Deserialize, Insertable)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Insertable, AsChangeset)]
 #[diesel(table_name = circle)]
 pub struct NewCircle {
     #[diesel(column_name = name)]
