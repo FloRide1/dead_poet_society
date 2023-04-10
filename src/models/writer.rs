@@ -3,7 +3,7 @@ use std::fmt;
 use diesel::prelude::*;
 use serde_derive::{Deserialize, Serialize};
 
-use crate::schema::writer;
+use crate::{schema::writer, Db};
 
 #[derive(
     Debug, PartialEq, Serialize, Deserialize, Queryable, Identifiable, Insertable, AsChangeset,
@@ -42,4 +42,47 @@ impl fmt::Display for WriterModel {
     }
 }
 
-impl WriterModel {}
+impl WriterModel {
+    pub async fn list_writers(db: Db) -> Result<Vec<WriterModel>, diesel::result::Error>{
+        db.run(move |conn| {
+            writer::table.load::<WriterModel>(conn)
+        }).await
+
+    }
+
+
+    pub async fn get_writer(db: Db, id: i32) -> Option<Self> {
+        db.run(move |conn| { 
+            writer::table
+                .filter(writer::id.eq(id))
+                .first::<Self>(conn)
+        }).await.ok()
+    }
+
+    pub async fn new_writer(db: Db, new_writer: NewWriter) -> Result<WriterModel, diesel::result::Error>
+    {
+        db.run(move |conn| {
+            diesel::insert_into(writer::table)
+                .values(new_writer)
+                .get_result(conn)
+        }).await
+    }
+
+    pub async fn edit_writer(db: Db, id: i32, new_writer: NewWriter) -> Result<usize, diesel::result::Error> {
+        db.run(move |conn| {
+            diesel::update(writer::table)
+                .filter(writer::id.eq(id))
+                .set(new_writer)
+                .execute(conn)
+        }).await
+    }
+
+    pub async fn delete_writer(db: Db, id: i32) -> Result<usize, diesel::result::Error>
+    {
+        db.run(move |conn| {
+            diesel::delete(writer::table)
+                .filter(writer::id.eq(id))
+                .execute(conn)
+        }).await
+    }
+}
