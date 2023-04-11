@@ -5,6 +5,9 @@ use rocket::serde::json::Json;
 
 use crate::models::circle::{CircleModel, NewCircle};
 use crate::Db;
+use crate::models::writer_circle::WriterCircleModel;
+
+use super::responses::circle_response::CircleResponse;
 
 
 #[get("/")]
@@ -18,9 +21,18 @@ pub async fn list_circles(db: Db) -> Result<Json<Vec<CircleModel>>, Status> {
 }
 
 #[get("/<id>")]
-pub async fn get_circle(db: Db, id: i32) -> Option<Json<CircleModel>> {
-    CircleModel::get_circle(&db, id).await.map(Json)
-    // TODO: Add list of circles
+pub async fn get_circle(db: Db, id: i32) -> Option<Json<CircleResponse>> {
+    let model = CircleModel::get_circle(&db, id).await;
+    if model.is_none() {
+        return Option::None;
+    }
+
+    let writers = WriterCircleModel::get_circle_writers(&db, id).await;
+    if writers.is_err() {
+        return Option::None;
+    }
+
+    Some(Json(CircleResponse::new(model.unwrap(), writers.unwrap_or(vec![]))))
 }
 
 #[post("/", format = "application/json", data = "<new_circle>")]
