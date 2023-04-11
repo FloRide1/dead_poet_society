@@ -7,9 +7,11 @@ use crate::models::writer::{WriterModel, NewWriter};
 use crate::models::writer_circle::WriterCircleModel;
 use crate::Db;
 
+use super::responses::writer_response::WriterResponse;
+
 #[get("/")]
 pub async fn list_writers(db: Db) -> Result<Json<Vec<WriterModel>>, Status> {
-    let res = WriterModel::list_writers(db).await;
+    let res = WriterModel::list_writers(&db).await;
 
     match res {
         Ok(res) => Ok(Json(res)),
@@ -18,15 +20,23 @@ pub async fn list_writers(db: Db) -> Result<Json<Vec<WriterModel>>, Status> {
 }
 
 #[get("/<id>")]
-pub async fn get_writer(db: Db, id: i32) -> Option<Json<WriterModel>> {
-    WriterModel::get_writer(db, id).await.map(Json)
+pub async fn get_writer(db: Db, id: i32) -> Option<Json<WriterResponse>> {
+    let model = WriterModel::get_writer(&db, id).await;
+    if model.is_none() {
+        return Option::None;
+    }
 
-    // TODO: Add list of circles
+    let circles = WriterCircleModel::get_writer_circles(&db, id).await;
+    if circles.is_err() {
+        return Option::None;
+    }
+
+    Some(Json(WriterResponse::new(model.unwrap(), circles.unwrap_or(vec![]))))
 }
 
 #[post("/", format = "application/json", data = "<new_writer>")]
 pub async fn new_writer(db: Db, new_writer: Json<NewWriter>) -> Result<Created<Json<WriterModel>>, Status> {
-    let res: Result<WriterModel, diesel::result::Error> = WriterModel::new_writer(db, new_writer.into_inner()).await;
+    let res: Result<WriterModel, diesel::result::Error> = WriterModel::new_writer(&db, new_writer.into_inner()).await;
 
     match res {
         Ok(res) => Ok(Created::new("/").body(Json(res))),
@@ -36,7 +46,7 @@ pub async fn new_writer(db: Db, new_writer: Json<NewWriter>) -> Result<Created<J
 
 #[patch("/<id>", format = "application/json", data = "<new_writer>")]
 pub async fn edit_writer(db: Db, id: i32, new_writer: Json<NewWriter>) -> Result<NoContent, Status> {
-    let res: Result<usize, diesel::result::Error> = WriterModel::edit_writer(db, id, new_writer.into_inner()).await;
+    let res: Result<usize, diesel::result::Error> = WriterModel::edit_writer(&db, id, new_writer.into_inner()).await;
 
     // TODO: Add Unauthorised ?
     match res {
@@ -49,7 +59,7 @@ pub async fn edit_writer(db: Db, id: i32, new_writer: Json<NewWriter>) -> Result
 #[delete("/<id>")]
 pub async fn delete_writer(db: Db, id: i32) -> Result<NoContent, Status>
 {
-    let res: Result<usize, diesel::result::Error> = WriterModel::delete_writer(db, id).await;
+    let res: Result<usize, diesel::result::Error> = WriterModel::delete_writer(&db, id).await;
 
     // TODO: Add Unauthorised ?
     match res {
@@ -61,7 +71,7 @@ pub async fn delete_writer(db: Db, id: i32) -> Result<NoContent, Status>
 
 #[post("/<writer_id>/circle/<circle_id>")]
 pub async fn join_circle(db: Db, writer_id: i32, circle_id: i32) -> Status {
-    let res = WriterCircleModel::new(db, writer_id, circle_id).await;
+    let res = WriterCircleModel::new(&db, writer_id, circle_id).await;
 
     match res {
         Ok(_) => Status::Created,
@@ -71,7 +81,7 @@ pub async fn join_circle(db: Db, writer_id: i32, circle_id: i32) -> Status {
 
 #[delete("/<writer_id>/circle/<circle_id>")]
 pub async fn quit_circle(db: Db, writer_id: i32, circle_id: i32) -> Status {
-    let res = WriterCircleModel::delete(db, writer_id, circle_id).await;
+    let res = WriterCircleModel::delete(&db, writer_id, circle_id).await;
 
     match res {
         Ok(affected) if affected == 1 => Status::NoContent,

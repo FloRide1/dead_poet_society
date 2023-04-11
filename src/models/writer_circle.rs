@@ -45,7 +45,7 @@ impl fmt::Display for WriterCircleModel {
 }
 
 impl WriterCircleModel {
-    pub async fn new(db: Db, writer_id: i32, circle_id: i32) -> Result<usize, diesel::result::Error> {
+    pub async fn new(db: &Db, writer_id: i32, circle_id: i32) -> Result<usize, diesel::result::Error> {
         db.run(move |conn| {
             diesel::insert_into(writercircle::table)
                 .values(Self { writer_id, circle_id })
@@ -53,7 +53,7 @@ impl WriterCircleModel {
         }).await
     }
 
-    pub async fn get_writer_circles(db: Db, writer_id: i32) -> Result<Vec<i32>, diesel::result::Error> {
+    pub async fn get_writer_circles(db: &Db, writer_id: i32) -> Result<Vec<i32>, diesel::result::Error> {
         db.run(move |conn| {
             writercircle::table
                 .filter(writercircle::writer_id.eq(writer_id))
@@ -62,7 +62,7 @@ impl WriterCircleModel {
         }).await
     }
 
-    pub async fn get_circle_writers(db: Db, circle_id: i32) -> Result<Vec<i32>, diesel::result::Error> {
+    pub async fn get_circle_writers(db: &Db, circle_id: i32) -> Result<Vec<i32>, diesel::result::Error> {
         db.run(move |conn| {
             writercircle::table
                 .filter(writercircle::circle_id.eq(circle_id))
@@ -71,7 +71,7 @@ impl WriterCircleModel {
         }).await
     }
 
-    pub async fn delete(db: Db, writer_id: i32, circle_id: i32) -> Result<usize, diesel::result::Error> {
+    pub async fn delete(db: &Db, writer_id: i32, circle_id: i32) -> Result<usize, diesel::result::Error> {
         db.run(move |conn|  {
             diesel::delete(writercircle::table)
                 .filter(writercircle::circle_id.eq(circle_id))

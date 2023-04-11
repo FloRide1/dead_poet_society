@@ -43,7 +43,7 @@ impl fmt::Display for WriterModel {
 }
 
 impl WriterModel {
-    pub async fn list_writers(db: Db) -> Result<Vec<WriterModel>, diesel::result::Error>{
+    pub async fn list_writers(db: &Db) -> Result<Vec<WriterModel>, diesel::result::Error>{
         db.run(move |conn| {
             writer::table.load::<WriterModel>(conn)
         }).await
@@ -51,7 +51,7 @@ impl WriterModel {
     }
 
 
-    pub async fn get_writer(db: Db, id: i32) -> Option<Self> {
+    pub async fn get_writer(db: &Db, id: i32) -> Option<Self> {
         db.run(move |conn| { 
             writer::table
                 .filter(writer::id.eq(id))
@@ -59,7 +59,7 @@ impl WriterModel {
         }).await.ok()
     }
 
-    pub async fn new_writer(db: Db, new_writer: NewWriter) -> Result<WriterModel, diesel::result::Error>
+    pub async fn new_writer(db: &Db, new_writer: NewWriter) -> Result<WriterModel, diesel::result::Error>
     {
         db.run(move |conn| {
             diesel::insert_into(writer::table)
@@ -68,7 +68,7 @@ impl WriterModel {
         }).await
     }
 
-    pub async fn edit_writer(db: Db, id: i32, new_writer: NewWriter) -> Result<usize, diesel::result::Error> {
+    pub async fn edit_writer(db: &Db, id: i32, new_writer: NewWriter) -> Result<usize, diesel::result::Error> {
         db.run(move |conn| {
             diesel::update(writer::table)
                 .filter(writer::id.eq(id))
@@ -77,7 +77,7 @@ impl WriterModel {
         }).await
     }
 
-    pub async fn delete_writer(db: Db, id: i32) -> Result<usize, diesel::result::Error>
+    pub async fn delete_writer(db: &Db, id: i32) -> Result<usize, diesel::result::Error>
     {
         db.run(move |conn| {
             diesel::delete(writer::table)
