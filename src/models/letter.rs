@@ -70,6 +70,12 @@ impl fmt::Display for LetterModel {
 }
 
 impl LetterModel {
+    pub async fn list_letters(db: &Db) -> Result<Vec<LetterModel>, diesel::result::Error>{
+        db.run(move |conn| {
+            letter::table.load::<LetterModel>(conn)
+        }).await
+    }
+
     pub async fn get_letter(db: &Db, id: i32) -> Option<Self> {
         db.run(move |conn| { 
             letter::table
