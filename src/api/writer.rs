@@ -75,7 +75,7 @@ pub async fn join_circle(db: Db, writer_id: i32, circle_id: i32) -> Status {
 
     match res {
         Ok(_) => Status::Created,
-        Err(_) => Status::InternalServerError
+        Err(_) => Status::Conflict
     }
 }
 
