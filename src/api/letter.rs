@@ -8,6 +8,16 @@ use crate::models::letter::{LetterModel, NewLetter};
 
 use super::requests::letter_request::LetterRequest;
 
+#[get("/")]
+pub async fn list_letters(db: Db) -> Result<Json<Vec<LetterModel>>, Status> {
+    let res = LetterModel::list_letters(&db).await;
+
+    match res {
+        Ok(res) => Ok(Json(res)),
+        Err(_) => Err(Status::InternalServerError)
+    }
+}
+
 #[get("/<id>")]
 pub async fn get_letter(db: Db, id: i32) -> Option<Json<LetterModel>> {
     LetterModel::get_letter(&db, id).await.map(Json)

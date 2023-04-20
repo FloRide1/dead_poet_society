@@ -27,7 +27,7 @@ async fn main() -> Result<(), rocket::Error> {
         .attach(Db::fairing())
         .mount("/writer", routes![writer::list_writers, writer::get_writer, writer::new_writer, writer::edit_writer, writer::delete_writer, writer::join_circle, writer::quit_circle])
         .mount("/circle", routes![circle::list_circles, circle::get_circle, circle::new_circle, circle::edit_circle, circle::delete_circle])
-        .mount("/letter", routes![letter::get_letter, letter::post_letters, letter::delete_letter])
+        .mount("/letter", routes![letter::list_letters, letter::get_letter, letter::post_letters, letter::delete_letter])
         .launch()
         .await?;
 
