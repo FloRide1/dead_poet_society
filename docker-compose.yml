@@ -28,9 +28,9 @@ services:
     networks:
         - bdd-network
 
-  api-rust:
-    build: ./api
-    container_name: api-rust
+  api_edit_rust:
+    build: ./api_edit_rust
+    container_name: api_edit_rust
     env_file:
       - .env
     expose:
@@ -41,12 +41,12 @@ services:
         database:
           condition: service_healthy
     networks:
-      - api-rust-network
+      - api-edit-rust-network
       - bdd-network
 volumes:
   pgadmin:
     driver: local
 
 networks:
-    api-rust-network:
+    api-edit-rust-network:
     bdd-network:
