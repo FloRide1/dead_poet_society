@@ -1,7 +1,7 @@
 FROM rust:latest as builder
 
-RUN USER=root cargo new --bin dead_poet_society
-WORKDIR /dead_poet_society
+RUN USER=root cargo new --bin api_edit_rust
+WORKDIR /api_edit_rust
 
 COPY ./Cargo.toml ./Cargo.toml
 
@@ -10,7 +10,7 @@ RUN rm src/*.rs
 
 COPY . ./
 
-RUN rm ./target/release/deps/dead_poet_society*
+RUN rm ./target/release/deps/api_edit_rust*
 RUN cargo build --release
 
 FROM debian:buster-slim
@@ -18,6 +18,6 @@ FROM debian:buster-slim
 RUN apt update
 RUN apt install -y libpq5
 
-COPY --from=builder /dead_poet_society/target/release/dead_poet_society .
+COPY --from=builder /api_edit_rust/target/release/api_edit_rust .
 
-CMD ["./dead_poet_society"]
+CMD ["./api_edit_rust"]

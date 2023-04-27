@@ -1,5 +1,5 @@
 [package]
-name = "dead_poet_society"
+name = "api_edit_rust"
 version = "0.1.0"
 edition = "2021"
 
