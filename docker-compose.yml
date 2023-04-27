@@ -28,6 +28,21 @@ services:
     networks:
         - bdd-network
 
+  api-rust:
+    build: ./api
+    container_name: api-rust
+    env_file:
+      - .env
+    expose:
+      - 8000
+    ports: 
+      - 8000:8000
+    depends_on:
+        database:
+          condition: service_healthy
+    networks:
+      - api-rust-network
+      - bdd-network
 volumes:
   pgadmin:
     driver: local
