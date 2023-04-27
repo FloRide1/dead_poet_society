@@ -4,6 +4,7 @@ services:
   database:
     image: postgres:14.1-alpine
     restart: unless-stopped
+    hostname: $POSTGRES_HOST
     healthcheck:
       test: ["CMD", "sh", "-c", "pg_isready -U $$POSTGRES_USER -h $$(hostname -i)"]
       interval: 10s
