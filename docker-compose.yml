@@ -43,10 +43,28 @@ services:
     networks:
       - api-edit-rust-network
       - bdd-network
+
+  api_get_python:
+    build: ./api_get_python
+    container_name: api_get_python
+    env_file:
+      - .env
+    expose:
+      - 5001
+    ports: 
+      - 5001:5001
+    depends_on:
+        database:
+          condition: service_healthy
+    networks:
+      - api-get-python-network
+      - bdd-network
+
 volumes:
   pgadmin:
     driver: local
 
 networks:
     api-edit-rust-network:
+    api-get-python-network:
     bdd-network:
