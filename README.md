@@ -1,16 +1,17 @@
-# SOA Project TP1
+# Dead Poet Society
 
-> Florian REIMAT
+### Florian "FloRide" REIMAT
 
 ## How to install / launch it
 
 ```sh
-git clone <to-define>
+git clone https://github.com/FloRide1/dead_poet_society.git
 
-# If you are on Nix
-# nix-shell
-
+# Generate .env file
 cp .env.default .env
+
+# Generate self-signed SSL key (don't use for production)
+openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout ./nginx/cert/nginx.priv.pem -out ./nginx/cert/nginx.pub.pem
 
 docker-compose up -d
 ```
