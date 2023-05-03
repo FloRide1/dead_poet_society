@@ -13,53 +13,74 @@ services:
     env_file:
       - .env
     networks:
-        - bdd-network
+        - db-network
 
   pgadmin:
     image: dpage/pgadmin4
+    hostname: $PGADMIN_HOST
     restart: unless-stopped
     env_file:
       - .env
-    ports:
-      - 15432:15432
     volumes:
       - pgadmin:/var/lib/pgadmin
     depends_on:
       - database
     networks:
-        - bdd-network
+        - pgadmin-network
+        - db-network
 
   api_edit_rust:
     build: ./api_edit_rust
     container_name: api_edit_rust
+    hostname: $API_EDIT_RUST_HOST
     env_file:
       - .env
-    expose:
-      - 8000
-    ports: 
-      - 8000:8000
     depends_on:
         database:
           condition: service_healthy
     networks:
       - api-edit-rust-network
-      - bdd-network
+      - db-network
 
   api_get_python:
     build: ./api_get_python
     container_name: api_get_python
+    hostname: $API_GET_PYTHON_HOST
     env_file:
       - .env
-    expose:
-      - 5001
-    ports: 
-      - 5001:5001
     depends_on:
         database:
           condition: service_healthy
     networks:
       - api-get-python-network
-      - bdd-network
+      - db-network
+
+  nginx:
+    image: nginx:latest
+    container_name: nginx
+    networks:
+      - nginx-network
+      - pgadmin-network
+      - api-get-python-network
+      - api-edit-rust-network
+    ports:
+      - '80:80'
+      - '443:443'
+      - '8000:8000'
+    env_file:
+      - .env
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/cert:/etc/cert
+    depends_on:
+      - api_edit_rust
+      - api_get_python
+    healthcheck:
+      test: curl --fail -s http://localhost:80 || exit 1
+      start_period: 5s
+      interval: 10s
+      timeout: 10s
+      retries: 5
 
 volumes:
   pgadmin:
@@ -68,4 +89,6 @@ volumes:
 networks:
     api-edit-rust-network:
     api-get-python-network:
-    bdd-network:
+    db-network:
+    pgadmin-network:
+    nginx-network:
