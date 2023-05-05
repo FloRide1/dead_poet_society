@@ -27,6 +27,8 @@ tags
 # Persistent undo
 [._]*.un~
 
+*.tmp
+
 # Env File
 .env
 
