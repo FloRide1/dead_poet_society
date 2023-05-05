@@ -6,5 +6,5 @@ with import (builtins.fetchTarball {
 
 mkShell {
 
-  buildInputs = [ diesel-cli postgresql ];
+  buildInputs = [ diesel-cli postgresql mqttui ];
 }
