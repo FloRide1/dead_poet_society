@@ -25,11 +25,20 @@ pub async fn get_letter(db: Db, id: i32) -> Option<Json<LetterModel>> {
 
 #[post("/circle/<circle_id>/writer/<writer_id>", format = "application/json", data = "<new_letter>")]
 pub async fn post_letters(db: Db, circle_id: i32, writer_id: i32, new_letter: Json<LetterRequest>) -> Result<Created<Json<LetterModel>>, Status> {
+    let new_letter = NewLetter::new(circle_id, writer_id, new_letter.into_inner());
 
-    let res: Result<LetterModel, diesel::result::Error> = LetterModel::new_letter(&db, NewLetter::new(circle_id, writer_id, new_letter.into_inner())).await;
+    crate::mqtt::mqtt_core::mqtt_publish("new_letter", &new_letter).await;
+    crate::mqtt::mqtt_core::mqtt_publish_json("new_letter_json", &new_letter).await;
+
+    let res: Result<LetterModel, diesel::result::Error> = LetterModel::new_letter(&db, new_letter).await;
 
     match res {
-        Ok(res) => Ok(Created::new("/").body(Json(res))),
+        Ok(res) => {
+            crate::mqtt::mqtt_core::mqtt_publish("new_letter_confirmed", &res).await;
+            crate::mqtt::mqtt_core::mqtt_publish_json("new_letter_confirmed_json", &res).await;
+
+            Ok(Created::new("/").body(Json(res)))
+        },
         Err(_) => Err(Status::InternalServerError),
     }
 }
@@ -37,11 +46,19 @@ pub async fn post_letters(db: Db, circle_id: i32, writer_id: i32, new_letter: Js
 #[delete("/<id>")]
 pub async fn delete_letter(db: Db, id: i32) -> Result<NoContent, Status>
 {
+    crate::mqtt::mqtt_core::mqtt_publish("delete_letter", id).await;
+    crate::mqtt::mqtt_core::mqtt_publish_json("delete_letter_json", id).await;
+
     let res: Result<usize, diesel::result::Error> = LetterModel::delete_letter(&db, id).await;
 
     // TODO: Add Unauthorised ?
     match res {
-        Ok(affected) if affected == 1 => Ok(NoContent),
+        Ok(affected) if affected == 1 => {
+            crate::mqtt::mqtt_core::mqtt_publish("delete_letter_confirmed", id).await;
+            crate::mqtt::mqtt_core::mqtt_publish_json("delete_letter_confirmed_json", id).await;
+
+            Ok(NoContent)
+        },
         Ok(_) => Err(Status::NotFound),
         Err(_) => Err(Status::InternalServerError),
     }
