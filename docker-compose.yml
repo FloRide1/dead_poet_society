@@ -5,8 +5,6 @@ services:
     image: postgres:14.1-alpine
     restart: unless-stopped
     hostname: $POSTGRES_HOST
-    ports: # Temporary
-      - 5432:5432
     healthcheck:
       test:
         ["CMD", "sh", "-c", "pg_isready -U $$POSTGRES_USER -h $$(hostname -i)"]
@@ -40,8 +38,11 @@ services:
       - .env
     depends_on:
       database:
-        condition: service_healthy
+          condition: service_healthy
+      mqtt_broker:
+          condition: service_started
     networks:
+      - mqtt-network
       - api-edit-rust-network
       - db-network
 
@@ -90,8 +91,6 @@ services:
     hostname: $MQTT_HOST
     volumes:
       - "./mqtt/mosquitto.conf:/mosquitto/config/mosquitto.conf"
-    ports:
-      - "1883:1883"
     networks:
       - mqtt-network
 
