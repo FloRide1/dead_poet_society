@@ -4,7 +4,7 @@ use rocket::response::status::{Created, NoContent};
 use rocket::serde::json::Json;
 
 use crate::models::writer::{WriterModel, NewWriter};
-use crate::models::writer_circle::WriterCircleModel;
+use crate::models::writer_circle::{WriterCircleModel, NewWriterCircle};
 use crate::Db;
 
 use super::responses::writer_response::WriterResponse;
@@ -22,9 +22,7 @@ pub async fn list_writers(db: Db) -> Result<Json<Vec<WriterModel>>, Status> {
 #[get("/<id>")]
 pub async fn get_writer(db: Db, id: i32) -> Option<Json<WriterResponse>> {
     let model = WriterModel::get_writer(&db, id).await;
-    if model.is_none() {
-        return Option::None;
-    }
+    model.as_ref()?;
 
     let circles = WriterCircleModel::get_writer_circles(&db, id).await;
     if circles.is_err() {
@@ -36,21 +34,42 @@ pub async fn get_writer(db: Db, id: i32) -> Option<Json<WriterResponse>> {
 
 #[post("/", format = "application/json", data = "<new_writer>")]
 pub async fn new_writer(db: Db, new_writer: Json<NewWriter>) -> Result<Created<Json<WriterModel>>, Status> {
-    let res: Result<WriterModel, diesel::result::Error> = WriterModel::new_writer(&db, new_writer.into_inner()).await;
+    let new_writer: NewWriter = new_writer.into_inner();
+
+    crate::mqtt::mqtt_core::mqtt_publish("new_writer", &new_writer).await;
+    crate::mqtt::mqtt_core::mqtt_publish_json("new_writer_json", &new_writer).await;
+
+    let res: Result<WriterModel, diesel::result::Error> = WriterModel::new_writer(&db, new_writer).await;
 
     match res {
-        Ok(res) => Ok(Created::new("/").body(Json(res))),
+        Ok(res) => {
+            crate::mqtt::mqtt_core::mqtt_publish("new_writer_created", &res).await;
+            crate::mqtt::mqtt_core::mqtt_publish_json("new_writer_created_json", &res).await;
+
+            Ok(Created::new("/").body(Json(res)))
+        },
         Err(_) => Err(Status::InternalServerError),
     }
 }
 
-#[patch("/<id>", format = "application/json", data = "<new_writer>")]
-pub async fn edit_writer(db: Db, id: i32, new_writer: Json<NewWriter>) -> Result<NoContent, Status> {
-    let res: Result<usize, diesel::result::Error> = WriterModel::edit_writer(&db, id, new_writer.into_inner()).await;
+#[patch("/<id>", format = "application/json", data = "<edit_writer>")]
+pub async fn edit_writer(db: Db, id: i32, edit_writer: Json<NewWriter>) -> Result<NoContent, Status> {
+    let edit_writer = edit_writer.into_inner();
+
+    crate::mqtt::mqtt_core::mqtt_publish("edit_writer", &edit_writer).await;
+    crate::mqtt::mqtt_core::mqtt_publish_json("edit_writer_json", &edit_writer).await;
+
+    let edit_writer_clone = edit_writer.clone();
+    let res: Result<usize, diesel::result::Error> = WriterModel::edit_writer(&db, id, edit_writer).await;
 
     // TODO: Add Unauthorised ?
     match res {
-        Ok(affected) if affected == 1 => Ok(NoContent),
+        Ok(affected) if affected == 1 => {
+            crate::mqtt::mqtt_core::mqtt_publish("edit_writer_confirmed", &edit_writer_clone).await;
+            crate::mqtt::mqtt_core::mqtt_publish_json("edit_writer_confirmed_json", &edit_writer_clone).await;
+
+            Ok(NoContent)
+        },
         Ok(_) => Err(Status::NotFound),
         Err(_) => Err(Status::InternalServerError),
     }
@@ -61,9 +80,17 @@ pub async fn delete_writer(db: Db, id: i32) -> Result<NoContent, Status>
 {
     let res: Result<usize, diesel::result::Error> = WriterModel::delete_writer(&db, id).await;
 
+    crate::mqtt::mqtt_core::mqtt_publish("delete_writer", id).await;
+    crate::mqtt::mqtt_core::mqtt_publish_json("delete_writer_json", id).await;
+
     // TODO: Add Unauthorised ?
     match res {
-        Ok(affected) if affected == 1 => Ok(NoContent),
+        Ok(affected) if affected == 1 => { 
+            crate::mqtt::mqtt_core::mqtt_publish("delete_writer_confirmed", id).await;
+            crate::mqtt::mqtt_core::mqtt_publish_json("delete_writer_confirmed_json", id).await;
+
+            Ok(NoContent)
+        },
         Ok(_) => Err(Status::NotFound),
         Err(_) => Err(Status::InternalServerError),
     }
@@ -71,20 +98,42 @@ pub async fn delete_writer(db: Db, id: i32) -> Result<NoContent, Status>
 
 #[post("/<writer_id>/circle/<circle_id>")]
 pub async fn join_circle(db: Db, writer_id: i32, circle_id: i32) -> Status {
-    let res = WriterCircleModel::new(&db, writer_id, circle_id).await;
+    let new_writer_circle = NewWriterCircle::new(writer_id, circle_id);
+
+    crate::mqtt::mqtt_core::mqtt_publish("join_circle", &new_writer_circle).await;
+    crate::mqtt::mqtt_core::mqtt_publish_json("join_circle_json", &new_writer_circle).await;
+
+    let res = WriterCircleModel::create(&db, &new_writer_circle).await;
+
 
     match res {
-        Ok(_) => Status::Created,
+        Ok(_) => { 
+            crate::mqtt::mqtt_core::mqtt_publish("join_circle_confirmed", &new_writer_circle).await;
+            crate::mqtt::mqtt_core::mqtt_publish_json("join_circle_confirmed_json", &new_writer_circle).await;
+
+            Status::Created
+        },
         Err(_) => Status::Conflict
     }
 }
 
 #[delete("/<writer_id>/circle/<circle_id>")]
 pub async fn quit_circle(db: Db, writer_id: i32, circle_id: i32) -> Status {
-    let res = WriterCircleModel::delete(&db, writer_id, circle_id).await;
+    let writer_circle = WriterCircleModel::new(writer_id, circle_id);
+
+    crate::mqtt::mqtt_core::mqtt_publish("quit_circle", &writer_circle).await;
+    crate::mqtt::mqtt_core::mqtt_publish_json("quit_circle_json", &writer_circle).await;
+
+    let res = writer_circle.delete(&db).await;
 
     match res {
-        Ok(affected) if affected == 1 => Status::NoContent,
+        Ok(affected) if affected == 1 => {
+            crate::mqtt::mqtt_core::mqtt_publish("quit_circle_confirmed", &writer_circle).await;
+            crate::mqtt::mqtt_core::mqtt_publish_json("quit_circle_confirmed_json", &writer_circle).await;
+
+
+            Status::NoContent
+        },
         Ok(_) => Status::NotFound,
         Err(_) => Status::InternalServerError
     }
