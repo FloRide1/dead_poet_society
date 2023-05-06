@@ -1,10 +1,13 @@
 extern crate diesel;
 extern crate dotenvy;
 extern crate diesel_migrations;
+#[macro_use]
+extern crate lazy_static;
 
 pub mod models;
 pub mod schema;
 pub mod api;
+pub mod mqtt;
 
 use rocket::routes;
 use rocket_sync_db_pools::database;
@@ -23,6 +26,9 @@ async fn main() -> Result<(), rocket::Error> {
     println!("Hello, world!");
 
     dotenv().ok();
+
+    mqtt::mqtt_core::mqtt_login(&std::env::var("MQTT_HOST").expect("MQTT_HOST is not set"), 
+                           std::env::var("MQTT_PORT").expect("MQTT_PORT is not set").parse::<u16>().expect("MQTT_PORT is not a number")).await;
 
     let _rocket = rocket::build()
         .attach(Db::fairing())
