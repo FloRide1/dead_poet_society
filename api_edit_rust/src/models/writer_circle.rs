@@ -23,7 +23,7 @@ pub struct WriterCircleModel {
     pub circle_id: i32,
 }
 
-#[derive(Debug, PartialEq, Serialize, Deserialize, Insertable)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Insertable, Clone)]
 #[diesel(table_name = writercircle)]
 pub struct NewWriterCircle {
     #[diesel(column_name = circle_id)]
@@ -44,11 +44,24 @@ impl fmt::Display for WriterCircleModel {
     }
 }
 
+impl NewWriterCircle {
+    pub fn new(writer_id: i32, circle_id: i32) -> Self
+    {
+        Self { circle_id, writer_id }
+    }
+}
+
 impl WriterCircleModel {
-    pub async fn new(db: &Db, writer_id: i32, circle_id: i32) -> Result<usize, diesel::result::Error> {
+    pub fn new(writer_id: i32, circle_id: i32) -> Self
+    {
+        Self { circle_id, writer_id }
+    }
+
+    pub async fn create(db: &Db, new_obj: &NewWriterCircle) -> Result<usize, diesel::result::Error> {
+        let new_obj_clone = new_obj.clone();
         db.run(move |conn| {
             diesel::insert_into(writercircle::table)
-                .values(Self { writer_id, circle_id })
+                .values(new_obj_clone)
                 .execute(conn)
         }).await
     }
@@ -71,7 +84,10 @@ impl WriterCircleModel {
         }).await
     }
 
-    pub async fn delete(db: &Db, writer_id: i32, circle_id: i32) -> Result<usize, diesel::result::Error> {
+    pub async fn delete(&self, db: &Db) -> Result<usize, diesel::result::Error> {
+        let circle_id = self.circle_id;
+        let writer_id = self.writer_id;
+
         db.run(move |conn|  {
             diesel::delete(writercircle::table)
                 .filter(writercircle::circle_id.eq(circle_id))

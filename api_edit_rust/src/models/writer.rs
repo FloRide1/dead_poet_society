@@ -23,7 +23,7 @@ pub struct WriterModel {
     pub pseudo: String,
 }
 
-#[derive(Debug, PartialEq, Serialize, Deserialize, Insertable, AsChangeset)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Insertable, AsChangeset, Clone)]
 #[diesel(table_name = writer)]
 pub struct NewWriter {
     #[diesel(column_name = title)]
