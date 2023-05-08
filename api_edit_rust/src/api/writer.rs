@@ -43,8 +43,8 @@ pub async fn new_writer(db: Db, new_writer: Json<NewWriter>) -> Result<Created<J
 
     match res {
         Ok(res) => {
-            crate::mqtt::mqtt_core::mqtt_publish("new_writer_created", &res).await;
-            crate::mqtt::mqtt_core::mqtt_publish_json("new_writer_created_json", &res).await;
+            crate::mqtt::mqtt_core::mqtt_publish("new_writer_confirmed", &res).await;
+            crate::mqtt::mqtt_core::mqtt_publish_json("new_writer_confirmed_json", &res).await;
 
             Ok(Created::new("/").body(Json(res)))
         },
