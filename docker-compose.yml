@@ -38,9 +38,9 @@ services:
       - .env
     depends_on:
       database:
-          condition: service_healthy
+        condition: service_healthy
       mqtt_broker:
-          condition: service_started
+        condition: service_started
     networks:
       - mqtt-network
       - api-edit-rust-network
@@ -94,6 +94,20 @@ services:
     networks:
       - mqtt-network
 
+  sub_log:
+    build: ./sub_log
+    container_name: sub_log
+    hostname: $SUBLOG_HOST
+    environment:
+      RUST_LOG: "info"
+    env_file:
+      - .env
+    depends_on:
+      - mqtt_broker
+    networks:
+      - sub-log-network
+      - mqtt-network
+
 volumes:
   pgadmin:
     driver: local
@@ -105,3 +119,4 @@ networks:
   pgadmin-network:
   nginx-network:
   mqtt-network:
+  sub-log-network:
