@@ -20,3 +20,20 @@ docker-compose up -d
 
 Please don't forget to setup the env file before launching the docker-compose.
 The default .env file is this one [.env.default](./.env.default).
+
+## Architecture:
+
+```mermaid
+graph TB;
+    Nginx --> API_Rust
+    Nginx --> API_Python
+    Nginx --> PgAdmin
+
+    API_Rust --> MQTT
+    MQTT --> SubLog
+
+    User --> Nginx
+    Database --> API_Python
+    Database --> API_Rust
+    API_Rust --> Database
+```
