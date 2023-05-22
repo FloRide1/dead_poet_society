@@ -27,8 +27,11 @@ async fn main() -> Result<(), rocket::Error> {
 
     dotenv().ok();
 
-    mqtt::mqtt_core::mqtt_login(&std::env::var("MQTT_HOST").expect("MQTT_HOST is not set"), 
-                           std::env::var("MQTT_PORT").expect("MQTT_PORT is not set").parse::<u16>().expect("MQTT_PORT is not a number")).await;
+    let host = std::env::var("MQTT_HOST").expect("MQTT_HOST is not set");
+    let port = std::env::var("MQTT_PORT").expect("MQTT_PORT is not set")
+                    .parse::<u16>().expect("MQTT_PORT is not a number");
+
+    mqtt::mqtt_core::mqtt_login(&host, port);
 
     let _rocket = rocket::build()
         .attach(Db::fairing())
