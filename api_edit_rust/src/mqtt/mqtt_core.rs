@@ -1,31 +1,33 @@
-use rocket::futures::lock::Mutex;
+// use rocket::futures::lock::Mutex;
 
-use rumqttc::v5::{mqttbytes::QoS, AsyncClient, MqttOptions};
+use std::sync::Mutex;
+
+use rumqttc::v5::{mqttbytes::QoS, Client, MqttOptions};
 
 // Used as a singleton
 lazy_static! {
-    pub static ref CLIENT: Mutex<Option<AsyncClient>> = Mutex::new(None);
+    pub static ref CLIENT: Mutex<Option<Client>> = Mutex::new(None);
 }
 
-pub async fn mqtt_login(host: &str, port: u16) {
+pub fn mqtt_login(host: &str, port: u16) {
     let mut mqttoptions = MqttOptions::new("api_edit_rust", host, port);
     mqttoptions.set_keep_alive(std::time::Duration::from_secs(5));
-    let (client, eventloop) = AsyncClient::new(mqttoptions, 100);
-    *CLIENT.lock().await = Some(client);
+    let (client, connection) = Client::new(mqttoptions, 100);
+    *CLIENT.lock().unwrap() = Some(client);
 
-    rocket::tokio::spawn(async { eventloop_handler(eventloop).await });
+    std::thread::spawn(|| connection_handler(connection));
 }
 
-async fn eventloop_handler(mut eventloop: rumqttc::v5::EventLoop) {
+fn connection_handler(mut connection: rumqttc::v5::Connection) {
     loop {
-        while let Ok(_notification) = eventloop.poll().await {
+        for (_i, _notification) in connection.iter().enumerate() {
             // println!("Notification = {:?}", notification);
         }
     }
 }
 
-pub async fn mqtt_publish(channel: &str, obj: impl serde::Serialize) {
-    if let Some(client) = &*CLIENT.lock().await {
+pub fn mqtt_publish(channel: &str, obj: impl serde::Serialize) {
+    if let Some(client) = &*CLIENT.lock().unwrap() {
         client
             .publish(
                 channel,
@@ -33,21 +35,22 @@ pub async fn mqtt_publish(channel: &str, obj: impl serde::Serialize) {
                 false,
                 bincode::serialize(&obj).expect("Obj cannot be serialize into byte"),
             )
-            .await
             .expect("Client publish failed");
     }
 }
 
-pub async fn mqtt_publish_json(channel: &str, obj: impl serde::Serialize) {
-    if let Some(client) = &*CLIENT.lock().await {
+pub fn mqtt_publish_json(channel: &str, obj: impl serde::Serialize) {
+    if let Some(client) = &*CLIENT.lock().unwrap() {
         client
             .publish(
                 channel,
                 QoS::AtLeastOnce,
                 false,
-                bincode::serialize(&serde_json::to_string(&obj).expect("Obj cannot be serialize into json")).expect("Obj Json cannot be serialize into byte"),
+                bincode::serialize(
+                    &serde_json::to_string(&obj).expect("Obj cannot be serialize into json"),
+                )
+                .expect("Obj Json cannot be serialize into byte"),
             )
-            .await
             .expect("Client publish failed");
     }
 }
