@@ -1,0 +1,409 @@
+---
+openapi: 3.0.3
+info:
+  title: Api dead_poet_society
+  version: 1.0.0-SNAPSHOT
+tags:
+- name: Writer
+- name: Circle
+- name: Letter
+paths:
+  /writer:
+    get:
+      tags:
+        - Writer
+      summary: List all Writers
+      responses:
+        "200":
+          description: List of Writers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/WriterObject"
+
+    post:
+      tags:
+        - Writer
+      summary: Create a new Writer
+      requestBody:
+        description: The new writer parameters
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewWriterObject'
+      responses:
+        "200":
+          description: Writer Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WriterObject'
+        "400":
+          description: Bad request (request or name is null)
+  /writer/{writer_id}:
+    get:
+      tags:
+        - Writer
+      summary: Get Writer with specific id
+      parameters:
+        - name: writer_id
+          in: path
+          required: true
+          schema:
+            format: int32
+            type: integer
+      responses:
+        "200":
+          description: Writer found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WriterObject"
+        "404":
+          description: Cannot found Writer
+
+    patch:
+      tags:
+      - Writer
+      summary: Edit Writer info
+      parameters:
+      - name: writer_id
+        in: path
+        required: true
+        schema:
+          format: int32
+          type: integer
+      requestBody:
+        description: The new writer parameters
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewWriterObject'
+      responses:
+        "204":
+          description: Writer has been succesfully edited
+        "400":
+          description: Bad request (request or name is null)
+        "404":
+          description: Cannot found Writer with this id
+    delete:
+      tags:
+      - Writer
+      summary: Delete writer
+      parameters:
+      - name: writer_id
+        in: path
+        required: true
+        schema:
+          format: int32
+          type: integer
+      responses:
+        "204":
+          description: Writer has been succesfully deleted
+        "404":
+          description: Cannot found Writer with this id
+  /writer/{writer_id}/circle/{circle_id}:
+    post:
+      tags:
+      - Writer
+      summary: Join Circle
+      parameters:
+      - name: writer_id
+        in: path
+        required: true
+        schema:
+          format: int32
+          type: integer
+      - name: circle_id
+        in: path
+        required: true
+        schema:
+          format: int32
+          type: integer
+      responses:
+        "204":
+          description: Writer has succesfully joined the Circle
+        "404":
+          description: Cannot found Writer or Circle
+        "409":
+          description: Writer has already join the Circle
+    delete:
+      tags:
+      - Writer
+      summary: Quit Circle
+      parameters:
+      - name: writer_id
+        in: path
+        required: true
+        schema:
+          format: int32
+          type: integer
+      - name: circle_id
+        in: path
+        required: true
+        schema:
+          format: int32
+          type: integer
+      responses:
+        "204":
+          description: Writer has succesfully leave the Circle
+        "404":
+          description: Cannot found Writer or Circle
+        "409":
+          description: Writer isn't in the Circle
+          
+  /circle:
+    get:
+      tags:
+        - Circle
+      summary: List all Circles
+      responses:
+        "200":
+          description: List of Circles
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CircleObject"
+
+    post:
+      tags:
+        - Circle
+      summary: Create a new Circle
+      requestBody:
+        description: The new Circle parameters
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewCircleObject'
+      responses:
+        "200":
+          description: Circle Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CircleObject'
+        "400":
+          description: Bad request (request or name is null)
+  /circle/{circle_id}:
+    get:
+      tags:
+        - Circle
+      summary: Get Circle with specific id
+      parameters:
+        - name: circle_id
+          in: path
+          required: true
+          schema:
+            format: int32
+            type: integer
+      responses:
+        "200":
+          description: Circle found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CircleObject"
+        "404":
+          description: Cannot found Circle
+
+    patch:
+      tags:
+      - Circle
+      summary: Edit Circle info
+      parameters:
+      - name: circle_id
+        in: path
+        required: true
+        schema:
+          format: int32
+          type: integer
+      requestBody:
+        description: The new circle parameters
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewCircleObject'
+      responses:
+        "204":
+          description: Circle has been succesfully edited
+        "400":
+          description: Bad request (request or name is null)
+        "404":
+          description: Cannot found Circle with this id
+    delete:
+      tags:
+      - Circle
+      summary: Delete Circle
+      parameters:
+      - name: circle_id
+        in: path
+        required: true
+        schema:
+          format: int32
+          type: integer
+      responses:
+        "204":
+          description: Circle has been succesfully deleted
+        "404":
+          description: Cannot found Circle with this id#
+  
+  /letter:
+    get:
+      tags:
+        - Letter
+      summary: List all Letters
+      responses:
+        "200":
+          description: List of Letters
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/LetterObject"
+  /letter/circle/{circle_id}/writer/{writer_id}:
+    post:
+      tags:
+        - Letter
+      summary: Post a new Letter
+      parameters:
+      - name: writer_id
+        in: path
+        required: true
+        schema:
+          format: int32
+          type: integer
+      - name: circle_id
+        in: path
+        required: true
+        schema:
+          format: int32
+          type: integer
+      requestBody:
+        description: The new Letter parameters
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewLetterObject'
+      responses:
+        "200":
+          description: Letter is posted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LetterObject'
+        "404":
+          description: Writer or Circle not found
+        "400":
+          description: Bad request (request or name is null)
+  /letter/{letter_id}:
+    get:
+      tags:
+        - Letter
+      summary: Get Circle with specific id
+      parameters:
+        - name: letter_id
+          in: path
+          required: true
+          schema:
+            format: int32
+            type: integer
+      responses:
+        "200":
+          description: Letter found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LetterObject"
+        "404":
+          description: Cannot found Letter
+    delete:
+      tags:
+      - Letter
+      summary: Delete Letter
+      parameters:
+      - name: letter_id
+        in: path
+        required: true
+        schema:
+          format: int32
+          type: integer
+      responses:
+        "204":
+          description: Letter has been succesfully deleted
+        "404":
+          description: Cannot found Letter with this id
+          
+components:
+  schemas:
+    NewWriterObject:
+      type: object
+      properties:
+        title:
+          type: string
+        name:
+          type: string
+        pseudo:
+          type: string
+    WriterObject:
+      type: object
+      properties:
+        id:
+          format: int32
+          type: integer
+        title:
+          type: string
+        name:
+          type: string
+        pseudo:
+          type: string
+    NewCircleObject:
+      type: object
+      properties:
+        name:
+          type: string
+    CircleObject:
+      type: object
+      properties:
+        id:
+          format: int32
+          type: integer
+        name:
+          type: string
+    NewLetterObject:
+      type: object
+      properties:
+        subject:
+          type: string
+        content:
+          type: string
+        reply_id:
+          format: int32
+          type: integer
+          nullable: true
+    LetterObject:
+      type: object
+      properties:
+        id:
+          format: int32
+          type: integer
+        writer_id:
+          format: int32
+          type: integer
+        circle_id:
+          format: int32
+          type: integer
+        subject:
+          type: string
+        content:
+          type: string
+        reply_id:
+          format: int32
+          type: integer
+          nullable: true
+            
+   
