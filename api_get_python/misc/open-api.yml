@@ -1,0 +1,160 @@
+---
+openapi: 3.0.3
+info:
+  title: Api Get Python
+  version: 1.0.0-SNAPSHOT
+tags:
+  - name: Writer
+  - name: Circle
+  - name: Letter
+paths:
+  /writer:
+    get:
+      tags:
+        - Writer
+      summary: List all Writers
+      responses:
+        "200":
+          description: List of Writers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/WriterObject"
+  /writer/{writer_id}:
+    get:
+      tags:
+        - Writer
+      summary: Get Writer with specific id
+      parameters:
+        - name: writer_id
+          in: path
+          required: true
+          schema:
+            format: int32
+            type: integer
+      responses:
+        "200":
+          description: Writer found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WriterObject"
+        "404":
+          description: Cannot found Writer
+
+  /circle:
+    get:
+      tags:
+        - Circle
+      summary: List all Circles
+      responses:
+        "200":
+          description: List of Circles
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CircleObject"
+  /circle/{circle_id}:
+    get:
+      tags:
+        - Circle
+      summary: Get Circle with specific id
+      parameters:
+        - name: circle_id
+          in: path
+          required: true
+          schema:
+            format: int32
+            type: integer
+      responses:
+        "200":
+          description: Circle found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CircleObject"
+        "404":
+          description: Cannot found Circle
+
+  /letter:
+    get:
+      tags:
+        - Letter
+      summary: List all Letters
+      responses:
+        "200":
+          description: List of Letters
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/LetterObject"
+  /letter/{letter_id}:
+    get:
+      tags:
+        - Letter
+      summary: Get Circle with specific id
+      parameters:
+        - name: letter_id
+          in: path
+          required: true
+          schema:
+            format: int32
+            type: integer
+      responses:
+        "200":
+          description: Letter found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LetterObject"
+        "404":
+          description: Cannot found Letter
+
+components:
+  schemas:
+    WriterObject:
+      type: object
+      properties:
+        id:
+          format: int32
+          type: integer
+        title:
+          type: string
+        name:
+          type: string
+        pseudo:
+          type: string
+    CircleObject:
+      type: object
+      properties:
+        id:
+          format: int32
+          type: integer
+        name:
+          type: string
+    LetterObject:
+      type: object
+      properties:
+        id:
+          format: int32
+          type: integer
+        writer_id:
+          format: int32
+          type: integer
+        circle_id:
+          format: int32
+          type: integer
+        subject:
+          type: string
+        content:
+          type: string
+        reply_id:
+          format: int32
+          type: integer
+          nullable: true
