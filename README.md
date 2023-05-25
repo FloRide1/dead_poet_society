@@ -7,7 +7,7 @@
 This is an Epita project, for the classes of "Service-oriented architectures", it's designed as an microservice system.
 The requirements were:
 
-- 2 API (1 One in Python + 1 )
+- 2 API
   - One in Python aimed to only fetch data from the database
   - One in the user choosen language (i choose Rust), aimed to add, edit and delete data.
 - 1 "PubSub" system, link to the API (i choose MQTT with mosquitto)
