@@ -23,7 +23,7 @@ cur = conn.cursor()
 def hello():
     return "Hello, Flask Dockerized!"
 
-@app.route('/writer', methods=['GET'])
+@app.route('/writers', methods=['GET'])
 def get_writer():
      cursor = conn.cursor(cursor_factory = psycopg2.extras.RealDictCursor)
      cursor.execute('SELECT * FROM writer')
@@ -42,7 +42,7 @@ def get_writer_by_id(id):
      else:
          abort(404, 'Writer not found')
 
-@app.route('/circle', methods=['GET'])
+@app.route('/circles', methods=['GET'])
 def get_circles():
      cursor = conn.cursor(cursor_factory = psycopg2.extras.RealDictCursor)
      cursor.execute('SELECT * FROM circle')
@@ -61,7 +61,7 @@ def get_circle_by_id(id):
      else:
          abort(404, 'Circle not found')
 
-@app.route('/letter', methods=['GET'])
+@app.route('/letters', methods=['GET'])
 def get_letters():
      cursor = conn.cursor(cursor_factory = psycopg2.extras.RealDictCursor)
      cursor.execute('SELECT * FROM letter')
