@@ -67,6 +67,7 @@ services:
       - pgadmin-network
       - api-get-python-network
       - api-edit-rust-network
+      - swagger-network
     ports:
       - "80:80"
       - "443:443"
@@ -108,6 +109,17 @@ services:
       - sub-log-network
       - mqtt-network
 
+  swagger-ui:
+    container_name: swagger
+    hostname: $SWAGGER_HOST
+    environment:
+        - SWAGGER_JSON=/open-api.yml
+    volumes:
+        - './misc/open-api.yml:/open-api.yml'
+    image: swaggerapi/swagger-ui
+    networks:
+      - swagger-network
+
 volumes:
   pgadmin:
     driver: local
@@ -120,3 +132,4 @@ networks:
   nginx-network:
   mqtt-network:
   sub-log-network:
+  swagger-network:
