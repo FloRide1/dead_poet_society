@@ -67,6 +67,7 @@ services:
     networks:
       - nginx-network
       - keycloak-network
+      - oauth2-proxy-network
       - pgadmin-network
       - api-get-python-network
       - api-edit-rust-network
@@ -88,6 +89,7 @@ services:
       - pgadmin
       - keycloak
       - swagger_ui
+      - oauth2_proxy
     healthcheck:
       test: curl --fail -s http://localhost:80 || exit 1
       start_period: 5s
@@ -178,6 +180,33 @@ services:
       - keycloak-network
       - keycloak-db-network
 
+  oauth2_proxy:
+    image: bitnami/oauth2-proxy:latest
+    # container_name: oauth2-proxy
+    restart: unless-stopped
+    hostname: $OAUTH2_HOST
+    ports:
+      - "4180:4180"
+    env_file: .env
+    depends_on:
+      keycloak:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    networks:
+      - oauth2-proxy-network
+      - nginx-network
+      - keycloak-network
+      - redis-network
+
+  redis:
+    image: redis
+    # container_name: redis
+    restart: unless-stopped
+    hostname: $REDIS_HOST
+    networks:
+      - redis-network
+
 volumes:
   pgadmin:
     driver: local
@@ -193,3 +222,5 @@ networks:
   swagger-network:
   keycloak-network:
   keycloak-db-network:
+  oauth2-proxy-network:
+  redis-network:
