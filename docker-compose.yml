@@ -18,6 +18,7 @@ services:
 
   pgadmin:
     image: dpage/pgadmin4
+    # container_name: pgadmin
     hostname: $PGADMIN_HOST
     restart: unless-stopped
     env_file:
@@ -32,7 +33,7 @@ services:
 
   api_edit_rust:
     build: ./api_edit_rust
-    container_name: api_edit_rust
+    # container_name: api_edit_rust
     hostname: $API_EDIT_RUST_HOST
     env_file:
       - .env
@@ -48,7 +49,7 @@ services:
 
   api_get_python:
     build: ./api_get_python
-    container_name: api_get_python
+    # container_name: api_get_python
     hostname: $API_GET_PYTHON_HOST
     env_file:
       - .env
@@ -61,9 +62,11 @@ services:
 
   nginx:
     image: nginx:latest
-    container_name: nginx
+    # container_name: nginx
+    hostname: $NGINX_HOST
     networks:
       - nginx-network
+      - keycloak-network
       - pgadmin-network
       - api-get-python-network
       - api-edit-rust-network
@@ -77,9 +80,14 @@ services:
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf
       - ./nginx/cert:/etc/cert
+      - ./nginx/cert/conf:/etc/letsencrypt
+      - ./nginx/cert/www:/var/www/certbot
     depends_on:
       - api_edit_rust
       - api_get_python
+      - pgadmin
+      - keycloak
+      - swagger_ui
     healthcheck:
       test: curl --fail -s http://localhost:80 || exit 1
       start_period: 5s
@@ -89,6 +97,7 @@ services:
 
   mqtt_broker:
     image: eclipse-mosquitto
+    # container_name: mqtt_broker
     hostname: $MQTT_HOST
     volumes:
       - "./mqtt/mosquitto.conf:/mosquitto/config/mosquitto.conf"
@@ -97,7 +106,7 @@ services:
 
   sub_log:
     build: ./sub_log
-    container_name: sub_log
+    # container_name: sub_log
     hostname: $SUBLOG_HOST
     environment:
       RUST_LOG: "info"
@@ -109,16 +118,65 @@ services:
       - sub-log-network
       - mqtt-network
 
-  swagger-ui:
-    container_name: swagger
+  swagger_ui:
+    # container_name: swagger
     hostname: $SWAGGER_HOST
     environment:
-        - SWAGGER_JSON=/open-api.yml
+      - SWAGGER_JSON=/open-api.yml
     volumes:
-        - './misc/open-api.yml:/open-api.yml'
+      - "./misc/open-api.yml:/open-api.yml"
     image: swaggerapi/swagger-ui
     networks:
       - swagger-network
+
+  keycloak_database:
+    image: postgres:14.1-alpine
+    # container_name: keycloack-database
+    restart: unless-stopped
+    hostname: $KEYCLOAK_DB_HOST
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "sh",
+          "-c",
+          "pg_isready -U $$KEYCLOAK_DB_USER -h $$(hostname -i)",
+        ]
+      interval: 10s
+      timeout: 15s
+      retries: 30
+    environment:
+      - POSTGRES_USER=$KEYCLOAK_DB_USER
+      - POSTGRES_PASSWORD=$KEYCLOAK_DB_PASSWORD
+      - POSTGRES_DB=$KEYCLOAK_DB_DB
+      - POSTGRES_PORT=$KEYCLOAK_DB_PORT
+    env_file: .env
+    networks:
+      - keycloak-db-network
+
+  keycloak:
+    image: jboss/keycloak:12.0.0
+    # container_name: keycloak
+    restart: unless-stopped
+    hostname: $KEYCLOAK_HOST
+    healthcheck:
+      test: curl --fail -s http://localhost:8080 || exit 1
+      start_period: 30s
+      interval: 15s
+      timeout: 15s
+      retries: 5
+    environment:
+      DB_VENDOR: POSTGRES
+      DB_ADDR: $KEYCLOAK_DB_HOST
+      DB_DATABASE: $KEYCLOAK_DB_DB
+      DB_USER: $KEYCLOAK_DB_USER
+      DB_PASSWORD: $KEYCLOAK_DB_PASSWORD
+    env_file: .env
+    depends_on:
+      - keycloak_database
+    networks:
+      - keycloak-network
+      - keycloak-db-network
 
 volumes:
   pgadmin:
@@ -133,3 +191,5 @@ networks:
   mqtt-network:
   sub-log-network:
   swagger-network:
+  keycloak-network:
+  keycloak-db-network:
