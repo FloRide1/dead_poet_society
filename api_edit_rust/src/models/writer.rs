@@ -59,6 +59,14 @@ impl WriterModel {
         }).await.ok()
     }
 
+    pub async fn get_writer_by_name(db: &Db, name: String) -> Option<Self> {
+        db.run(move |conn| { 
+            writer::table
+                .filter(writer::name.eq(name))
+                .first::<Self>(conn)
+        }).await.ok()
+    }
+
     pub async fn new_writer(db: &Db, new_writer: NewWriter) -> Result<WriterModel, diesel::result::Error>
     {
         db.run(move |conn| {
@@ -84,5 +92,13 @@ impl WriterModel {
                 .filter(writer::id.eq(id))
                 .execute(conn)
         }).await
+    }
+
+    pub async fn get_or_create_user(db: &Db, user: String) -> Result<WriterModel, diesel::result::Error> {
+        match Self::get_writer_by_name(db, user.to_string()).await {
+            Some(res) => return Ok(res),
+            None => return Self::new_writer(db, NewWriter { title: user.to_string(), name: user.to_string(), pseudo: user.to_string() }).await
+        }
+
     }
 }
