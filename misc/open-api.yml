@@ -8,7 +8,7 @@ tags:
 - name: Circle
 - name: Letter
 paths:
-  /writer:
+  /writers:
     get:
       tags:
         - Writer
@@ -22,7 +22,7 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/WriterObject"
-
+  /writer:
     post:
       tags:
         - Writer
@@ -34,7 +34,7 @@ paths:
             schema:
               $ref: '#/components/schemas/NewWriterObject'
       responses:
-        "200":
+        "201":
           description: Writer Created
           content:
             application/json:
@@ -42,6 +42,25 @@ paths:
                 $ref: '#/components/schemas/WriterObject'
         "400":
           description: Bad request (request or name is null)
+        "409":
+          description: Writer already exist
+    patch:
+      tags:
+      - Writer
+      summary: Edit Writer info
+      requestBody:
+        description: The new writer parameters
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewWriterObject'
+      responses:
+        "204":
+          description: Writer has been succesfully edited
+        "400":
+          description: Bad request (request or name is null)
+        "404":
+          description: Cannot found Writer with this id
   /writer/{writer_id}:
     get:
       tags:
@@ -63,59 +82,13 @@ paths:
                 $ref: "#/components/schemas/WriterObject"
         "404":
           description: Cannot found Writer
-
-    patch:
-      tags:
-      - Writer
-      summary: Edit Writer info
-      parameters:
-      - name: writer_id
-        in: path
-        required: true
-        schema:
-          format: int32
-          type: integer
-      requestBody:
-        description: The new writer parameters
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/NewWriterObject'
-      responses:
-        "204":
-          description: Writer has been succesfully edited
-        "400":
-          description: Bad request (request or name is null)
-        "404":
-          description: Cannot found Writer with this id
-    delete:
-      tags:
-      - Writer
-      summary: Delete writer
-      parameters:
-      - name: writer_id
-        in: path
-        required: true
-        schema:
-          format: int32
-          type: integer
-      responses:
-        "204":
-          description: Writer has been succesfully deleted
-        "404":
-          description: Cannot found Writer with this id
-  /writer/{writer_id}/circle/{circle_id}:
+          
+  /writer/circle/{circle_id}:
     post:
       tags:
       - Writer
       summary: Join Circle
       parameters:
-      - name: writer_id
-        in: path
-        required: true
-        schema:
-          format: int32
-          type: integer
       - name: circle_id
         in: path
         required: true
@@ -123,7 +96,7 @@ paths:
           format: int32
           type: integer
       responses:
-        "204":
+        "201":
           description: Writer has succesfully joined the Circle
         "404":
           description: Cannot found Writer or Circle
@@ -134,12 +107,6 @@ paths:
       - Writer
       summary: Quit Circle
       parameters:
-      - name: writer_id
-        in: path
-        required: true
-        schema:
-          format: int32
-          type: integer
       - name: circle_id
         in: path
         required: true
@@ -154,7 +121,8 @@ paths:
         "409":
           description: Writer isn't in the Circle
           
-  /circle:
+          
+  /circles:
     get:
       tags:
         - Circle
@@ -168,7 +136,7 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/CircleObject"
-
+  /circle:
     post:
       tags:
         - Circle
@@ -180,7 +148,7 @@ paths:
             schema:
               $ref: '#/components/schemas/NewCircleObject'
       responses:
-        "200":
+        "201":
           description: Circle Created
           content:
             application/json:
@@ -251,7 +219,7 @@ paths:
         "404":
           description: Cannot found Circle with this id#
   
-  /letter:
+  /letters:
     get:
       tags:
         - Letter
@@ -265,18 +233,12 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/LetterObject"
-  /letter/circle/{circle_id}/writer/{writer_id}:
+  /letter/circle/{circle_id}:
     post:
       tags:
         - Letter
       summary: Post a new Letter
       parameters:
-      - name: writer_id
-        in: path
-        required: true
-        schema:
-          format: int32
-          type: integer
       - name: circle_id
         in: path
         required: true
@@ -290,7 +252,7 @@ paths:
             schema:
               $ref: '#/components/schemas/NewLetterObject'
       responses:
-        "200":
+        "201":
           description: Letter is posted
           content:
             application/json:
@@ -344,8 +306,6 @@ components:
       type: object
       properties:
         title:
-          type: string
-        name:
           type: string
         pseudo:
           type: string
