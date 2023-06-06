@@ -192,21 +192,10 @@ services:
     depends_on:
       keycloak:
         condition: service_healthy
-      redis:
-        condition: service_started
     networks:
       - oauth2-proxy-network
       - nginx-network
       - keycloak-network
-      - redis-network
-
-  redis:
-    image: redis
-    # container_name: redis
-    restart: unless-stopped
-    hostname: $REDIS_HOST
-    networks:
-      - redis-network
 
 volumes:
   pgadmin:
@@ -224,4 +213,3 @@ networks:
   keycloak-network:
   keycloak-db-network:
   oauth2-proxy-network:
-  redis-network:
