@@ -8,7 +8,7 @@ tags:
   - name: Circle
   - name: Letter
 paths:
-  /writer:
+  /writers:
     get:
       tags:
         - Writer
@@ -44,7 +44,7 @@ paths:
         "404":
           description: Cannot found Writer
 
-  /circle:
+  /circles:
     get:
       tags:
         - Circle
@@ -80,7 +80,7 @@ paths:
         "404":
           description: Cannot found Circle
 
-  /letter:
+  /letters:
     get:
       tags:
         - Letter
