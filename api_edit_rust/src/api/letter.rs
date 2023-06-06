@@ -1,31 +1,20 @@
 use rocket::http::Status;
-use rocket::{get, post, delete};
+use rocket::{post, delete};
 use rocket::response::status::{Created, NoContent};
 use rocket::serde::json::Json;
 
 use crate::Db;
 use crate::models::letter::{LetterModel, NewLetter};
+use crate::models::writer::WriterModel;
 
 use super::requests::letter_request::LetterRequest;
+use super::user::AuthUser;
 
-#[get("/")]
-pub async fn list_letters(db: Db) -> Result<Json<Vec<LetterModel>>, Status> {
-    let res = LetterModel::list_letters(&db).await;
+#[post("/circle/<circle_id>", format = "application/json", data = "<new_letter>")]
+pub async fn post_letters(db: Db, circle_id: i32, auth: AuthUser, new_letter: Json<LetterRequest>) -> Result<Created<Json<LetterModel>>, Status> {
+    let writer = WriterModel::get_or_create_user(&db, auth.user).await.unwrap();
 
-    match res {
-        Ok(res) => Ok(Json(res)),
-        Err(_) => Err(Status::InternalServerError)
-    }
-}
-
-#[get("/<id>")]
-pub async fn get_letter(db: Db, id: i32) -> Option<Json<LetterModel>> {
-    LetterModel::get_letter(&db, id).await.map(Json)
-}
-
-#[post("/circle/<circle_id>/writer/<writer_id>", format = "application/json", data = "<new_letter>")]
-pub async fn post_letters(db: Db, circle_id: i32, writer_id: i32, new_letter: Json<LetterRequest>) -> Result<Created<Json<LetterModel>>, Status> {
-    let new_letter = NewLetter::new(circle_id, writer_id, new_letter.into_inner());
+    let new_letter = NewLetter::new(circle_id, writer.id, new_letter.into_inner());
 
     crate::mqtt::mqtt_core::mqtt_publish("new_letter", &new_letter);
     crate::mqtt::mqtt_core::mqtt_publish_json("new_letter_json", &new_letter);
@@ -44,8 +33,24 @@ pub async fn post_letters(db: Db, circle_id: i32, writer_id: i32, new_letter: Js
 }
 
 #[delete("/<id>")]
-pub async fn delete_letter(db: Db, id: i32) -> Result<NoContent, Status>
+pub async fn delete_letter(db: Db, auth: AuthUser, id: i32) -> Result<NoContent, Status>
 {
+    let writer = WriterModel::get_writer_by_name(&db, auth.user).await;
+    if writer.is_none() {
+        return Err(Status::Unauthorized);
+    }
+
+    let writer = writer.unwrap();
+    match LetterModel::get_letter(&db, id).await {
+        Some(letter) => { 
+            if letter.writer_id != writer.id 
+            {
+                return Err(Status::Unauthorized);
+            }
+        },
+        None => return Err(Status::NotFound),
+    }
+
     crate::mqtt::mqtt_core::mqtt_publish("delete_letter", id);
     crate::mqtt::mqtt_core::mqtt_publish_json("delete_letter_json", id);
 
