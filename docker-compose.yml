@@ -188,8 +188,6 @@ services:
     # container_name: oauth2-proxy
     restart: unless-stopped
     hostname: $OAUTH2_HOST
-    ports:
-      - "4180:4180"
     env_file: .env
     depends_on:
       keycloak:
