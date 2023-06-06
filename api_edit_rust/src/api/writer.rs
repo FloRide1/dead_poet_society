@@ -1,5 +1,5 @@
 use rocket::http::Status;
-use rocket::{get, post, delete, patch};
+use rocket::{post, delete, patch};
 use rocket::response::status::{Created, NoContent};
 use rocket::serde::json::Json;
 
@@ -8,30 +8,6 @@ use crate::models::writer_circle::{WriterCircleModel, NewWriterCircle};
 use crate::Db;
 
 use super::responses::writer_response::WriterResponse;
-
-#[get("/")]
-pub async fn list_writers(db: Db) -> Result<Json<Vec<WriterModel>>, Status> {
-    let res = WriterModel::list_writers(&db).await;
-
-    match res {
-        Ok(res) => Ok(Json(res)),
-        Err(_) => Err(Status::InternalServerError)
-    }
-}
-
-#[get("/<id>")]
-pub async fn get_writer(db: Db, id: i32) -> Option<Json<WriterResponse>> {
-    let model = WriterModel::get_writer(&db, id).await;
-    model.as_ref()?;
-
-    let circles = WriterCircleModel::get_writer_circles(&db, id).await;
-    if circles.is_err() {
-        return Option::None;
-    }
-
-    Some(Json(WriterResponse::new(model.unwrap(), circles.unwrap_or(vec![]))))
-}
-
 #[post("/", format = "application/json", data = "<new_writer>")]
 pub async fn new_writer(db: Db, new_writer: Json<NewWriter>) -> Result<Created<Json<WriterModel>>, Status> {
     let new_writer: NewWriter = new_writer.into_inner();
