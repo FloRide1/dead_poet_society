@@ -37,11 +37,8 @@ cd dead_poet_society
 # Generate .env file
 cp .env.default .env
 
-# Create cert folder in nginx
-mkdir -p ./nginx/cert
-
 # Generate self-signed SSL key (don't use for production)
-openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout ./nginx/cert/nginx.priv.pem -out ./nginx/cert/nginx.pub.pem
+openssl req -x509 -newkey rsa:4096 -keyout ./nginx/cert/key.pem -out ./nginx/cert/cert.pem -days 365 -nodes -config ./nginx/cert/app.config
 
 # Launch docker
 docker-compose up -d
